@@ -41,6 +41,8 @@ dependencies:
   intl: ^0.17.0
   flutter_barcode_scanner: ^2.0.0
   font_awesome_flutter: ^9.2.0
+  flutter_spinbox: ^0.8.0
+  jiffy: ^5.0.0
 
 dev_dependencies:
   flutter_test:

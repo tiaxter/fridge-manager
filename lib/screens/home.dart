@@ -24,6 +24,21 @@ class Home extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Fridge Management"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info),
+            onPressed: () {
+              showAboutDialog(
+                context: context,
+                children: const [
+                  Text("Developed by Gerardo Palmiotto"),
+                  Text("From an idea of Juri Donvito"),
+                  Text("Using Open Food Facts API"),
+                ],
+              );
+            },
+          )
+        ],
       ),
       floatingActionButton: SpeedDial(
         icon: Icons.add,
@@ -88,6 +103,7 @@ class Home extends StatelessWidget {
                 child: FoodCard(
                   title: foods[index]["productName"],
                   expiration: foods[index]["expirationDate"],
+                  index: index,
                 ),
                 key: UniqueKey(),
                 onDismissed: () async {

@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter_spinbox/material.dart';
 
 import '../utils/api.dart';
 
 class FoodAdderPopup extends StatefulWidget{
   final String? barCode;
-  const FoodAdderPopup({Key? key, this.barCode}) : super(key: key);
+  final int? indexToUpdate;
+  const FoodAdderPopup({
+    Key? key, this.barCode, this.indexToUpdate
+  }) : super(key: key);
 
   @override
   _FoodAdderPopupState createState() => _FoodAdderPopupState();
@@ -14,7 +18,9 @@ class FoodAdderPopup extends StatefulWidget{
 }
 
 class _FoodAdderPopupState extends State<FoodAdderPopup>{
-  Map<String, dynamic> formFields = {};
+  Map<String, dynamic> formFields = {
+    'quantity': 1.0,
+  };
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
   TextEditingController productNameController = TextEditingController();
   TextEditingController expirationDateController = TextEditingController();
@@ -22,7 +28,7 @@ class _FoodAdderPopupState extends State<FoodAdderPopup>{
   void openDatePicker(BuildContext context) async {
     DateTime? date = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: (formFields.containsKey("expirationDate") && formFields["expirationDate"] != null) ? formFields["expirationDate"] : DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime(3000)
     );
@@ -47,8 +53,15 @@ class _FoodAdderPopupState extends State<FoodAdderPopup>{
 
     // Get stored foods
     List<dynamic> foods = Hive.box('app').get('foods', defaultValue: <Map<dynamic, dynamic>>[]);
-    // Add the new one
-    foods.add(formFields);
+
+    if (widget.indexToUpdate != null) {
+      // Replace the old with the new one
+      foods[widget.indexToUpdate ?? 0] = formFields;
+    } else {
+      // Add the new one
+      foods.add(formFields);
+    }
+
     // Save velues to the db
     Hive.box('app').put('foods', foods);
     Navigator.of(context).pop();
@@ -56,15 +69,24 @@ class _FoodAdderPopupState extends State<FoodAdderPopup>{
 
   @override
   Widget build(BuildContext context) {
+    String action = widget.indexToUpdate != null ? "Edit" : "Add";
+    if (widget.indexToUpdate != null) {
+      var currentFood = Hive.box('app').get('foods', defaultValue: <Map<dynamic, dynamic>>[])[widget.indexToUpdate ?? 0];
+      formFields["productName"] = currentFood["productName"];
+      formFields["expirationDate"] = currentFood["expirationDate"];
+      productNameController.text = formFields["productName"];
+      expirationDateController.text = DateFormat('yyyy-MM-dd').format(formFields["expirationDate"]);
+    }
+
     return AlertDialog(
-      title: const Text('Add food'),
+      title: Text("$action food"),
       content: FutureBuilder(
         future: widget.barCode == null ? null: Api.getProductInfo(widget.barCode ?? ""),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const SizedBox(
               width: double.infinity,
-              height: 30,
+              height: 60,
               child: Center(
                 child: CircularProgressIndicator()
               )
@@ -84,7 +106,7 @@ class _FoodAdderPopupState extends State<FoodAdderPopup>{
                   TextFormField(
                     controller: productNameController,
                     decoration: const InputDecoration(
-                      labelText: "Enter food name"
+                      labelText: "Food name"
                     ),
                     validator: (value) => (value == null || value.isEmpty) ? 'Required field' : null,
                     onSaved: (String? value) => formFields["productName"] = value ?? "",
@@ -94,8 +116,17 @@ class _FoodAdderPopupState extends State<FoodAdderPopup>{
                     readOnly: true,
                     onTap: () => openDatePicker(context),
                     decoration: const InputDecoration(
-                      labelText: "Enter expiration date"
+                      labelText: "Expiration date"
                     ),
+                  ),
+                  SpinBox(
+                    min: 1,
+                    max: 100,
+                    decoration: const InputDecoration(
+                      labelText: 'Quantity',
+                    ),
+                    onChanged: (double value) => formFields["quantity"] = value,
+                    value: formFields['quantity'] ?? 1.0,
                   )
                 ],
               ),
@@ -109,7 +140,7 @@ class _FoodAdderPopupState extends State<FoodAdderPopup>{
           onPressed: () => Navigator.of(context).pop(),
         ),
         TextButton(
-          child: const Text("Add"),
+          child: Text(action),
           onPressed: onSave,
         )
       ],
