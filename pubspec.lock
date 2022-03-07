@@ -92,6 +92,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "8.1.4"
+  cart_stepper:
+    dependency: "direct main"
+    description:
+      name: cart_stepper
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.0.2"
   characters:
     dependency: transitive
     description:

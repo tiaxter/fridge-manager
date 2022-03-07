@@ -7,9 +7,10 @@ import 'food_adder.dart';
 class FoodCard extends StatelessWidget {
   final String title;
   final DateTime expiration;
+  final double quantity;
   final int index;
 
-  const FoodCard({Key? key, required this.title, required this.expiration, required this.index}) : super(key: key);
+  const FoodCard({Key? key, required this.title, required this.expiration, required this.index, required this.quantity}) : super(key: key);
 
   Color calculateProgressIndicatorColor(int expirationDays) {
     if (expirationDays >= 15) {
@@ -31,9 +32,23 @@ class FoodCard extends StatelessWidget {
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            overflow: TextOverflow.ellipsis,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Flexible(
+                child: Text(
+                  title,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
+              Text(
+                " (x${quantity.toInt()})",
+                style: const TextStyle(
+                  color: Colors.grey,
+                ),
+              )
+            ],
           ),
           Text(
             "Expiration: ${DateFormat('yyyy-MM-dd').format(expiration)}",

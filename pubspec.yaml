@@ -43,6 +43,7 @@ dependencies:
   font_awesome_flutter: ^9.2.0
   flutter_spinbox: ^0.8.0
   jiffy: ^5.0.0
+  cart_stepper: ^2.0.2
 
 dev_dependencies:
   flutter_test:

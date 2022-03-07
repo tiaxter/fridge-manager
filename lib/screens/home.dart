@@ -103,6 +103,7 @@ class Home extends StatelessWidget {
                 child: FoodCard(
                   title: foods[index]["productName"],
                   expiration: foods[index]["expirationDate"],
+                  quantity: foods[index]["quantity"] ?? 1.0,
                   index: index,
                 ),
                 key: UniqueKey(),

@@ -1,7 +1,8 @@
+import 'package:cart_stepper/cart_stepper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinbox/flutter_spinbox.dart';
 import 'package:intl/intl.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:flutter_spinbox/material.dart';
 
 import '../utils/api.dart';
 
@@ -74,6 +75,7 @@ class _FoodAdderPopupState extends State<FoodAdderPopup>{
       var currentFood = Hive.box('app').get('foods', defaultValue: <Map<dynamic, dynamic>>[])[widget.indexToUpdate ?? 0];
       formFields["productName"] = currentFood["productName"];
       formFields["expirationDate"] = currentFood["expirationDate"];
+      formFields["quantity"] = currentFood["quantity"] ?? 1.0;
       productNameController.text = formFields["productName"];
       expirationDateController.text = DateFormat('yyyy-MM-dd').format(formFields["expirationDate"]);
     }
@@ -95,7 +97,7 @@ class _FoodAdderPopupState extends State<FoodAdderPopup>{
 
           if (snapshot.hasData && (snapshot.data as Map<String, dynamic>)["status"] == 1) {
             Map<String, dynamic> data = snapshot.data;
-            productNameController.text = data["product"]["product_name"];
+            productNameController.text = data["product"]["product_name_it"] ?? data["product"]["product_name"];
           }
 
           return Form(
@@ -121,12 +123,12 @@ class _FoodAdderPopupState extends State<FoodAdderPopup>{
                   ),
                   SpinBox(
                     min: 1,
-                    max: 100,
+                    max: 1000,
                     decoration: const InputDecoration(
-                      labelText: 'Quantity',
+                      labelText: "Quantity"
                     ),
+                    value: formFields["quantity"],
                     onChanged: (double value) => formFields["quantity"] = value,
-                    value: formFields['quantity'] ?? 1.0,
                   )
                 ],
               ),
