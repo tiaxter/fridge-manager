@@ -38,8 +38,6 @@ class FoodCard extends StatelessWidget {
               Flexible(
                 child: Text(
                   title,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
                 ),
               ),
               Text(
