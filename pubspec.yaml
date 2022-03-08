@@ -40,11 +40,11 @@ dependencies:
   flutter_speed_dial: ^5.0.0+1
   intl: ^0.17.0
   flutter_barcode_scanner: ^2.0.0
-  font_awesome_flutter: ^9.2.0
   flutter_spinbox: ^0.8.0
   jiffy: ^5.0.0
   cart_stepper: ^2.0.2
   quick_actions: ^0.6.0+10
+  workmanager: ^0.4.1
 
 dev_dependencies:
   flutter_test:

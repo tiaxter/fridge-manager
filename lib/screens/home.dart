@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:fridge_management/widgets/dismissable_tile.dart';
 import 'package:fridge_management/widgets/food_adder.dart';
 import 'package:fridge_management/widgets/food_card.dart';
@@ -100,19 +99,7 @@ class Home extends StatelessWidget {
               child: Image.asset('assets/png/with_barcode.png'),
             ),
             label: 'With Bar Code',
-            onTap: () async {
-              String barcode = await FlutterBarcodeScanner.scanBarcode(
-                "#00000000",
-                "Cancel",
-                false,
-                ScanMode.BARCODE
-              );
-              // If there's no recorded barcode
-              if (barcode == "-1") {
-                return;
-              }
-              openFoodAdderPopup(context, barcode);
-            }
+            onTap: () => scanProductWithBarcode(context)
           ),
         ],
       ),
@@ -121,9 +108,14 @@ class Home extends StatelessWidget {
         valueListenable: Hive.box('app').listenable(keys: ["foods"]),
         // Return the List of Foods' cards
         builder: (context, box, widget) {
-          /* box.delete("foods"); */
           // Get foods data
           List<dynamic> foods = box.get("foods", defaultValue: <Map<String, dynamic>>[]);
+          foods.sort((a, b) {
+            DateTime firstDate = a["expirationDate"];
+            DateTime secondDate = b["expirationDate"];
+
+            return firstDate.compareTo(secondDate);
+          });
 
           // If there's no food then show "No food"
           if (foods.isEmpty) {
