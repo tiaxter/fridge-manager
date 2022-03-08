@@ -6,6 +6,7 @@ import 'package:fridge_management/widgets/dismissable_tile.dart';
 import 'package:fridge_management/widgets/food_adder.dart';
 import 'package:fridge_management/widgets/food_card.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:quick_actions/quick_actions.dart';
 
 class Home extends StatelessWidget {
   const Home({Key? key}) : super(key: key);
@@ -19,8 +20,47 @@ class Home extends StatelessWidget {
     );
   }
 
+  void scanProductWithBarcode(BuildContext context) async {
+    String barcode = await FlutterBarcodeScanner.scanBarcode(
+      "#00000000",
+      "Cancel",
+      false,
+      ScanMode.BARCODE
+    );
+    // If there's no recorded barcode
+    if (barcode == "-1") {
+      return;
+    }
+    openFoodAdderPopup(context, barcode);
+  }
+
+
   @override
   Widget build(BuildContext context) {
+    QuickActions quickActions = const QuickActions();
+    quickActions.setShortcutItems(<ShortcutItem>[
+      const ShortcutItem(
+        type: 'add_product_barcode',
+        localizedTitle: 'Add product with barcode',
+        icon: 'with_barcode',
+      ),
+      const ShortcutItem(
+        type: 'add_product_without_barcode',
+        localizedTitle: 'Add product without barcode',
+        icon: 'without_barcode',
+      ),
+    ]);
+    quickActions.initialize((String shortcutType) {
+      if (shortcutType == 'add_product_barcode') {
+        scanProductWithBarcode(context);
+      }
+
+      if (shortcutType == 'add_product_without_barcode') {
+        openFoodAdderPopup(context, null);
+      }
+    });
+
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Fridge Management"),
@@ -47,7 +87,10 @@ class Home extends StatelessWidget {
         spaceBetweenChildren: 4,
         children: [
           SpeedDialChild(
-            child: const FaIcon(FontAwesomeIcons.barcode),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Image.asset('assets/png/with_barcode.png'),
+            ),
             label: 'With Bar Code',
             onTap: () async {
               String barcode = await FlutterBarcodeScanner.scanBarcode(
@@ -64,12 +107,9 @@ class Home extends StatelessWidget {
             }
           ),
           SpeedDialChild(
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                FaIcon(FontAwesomeIcons.barcode, color: Colors.grey.shade400),
-                const Icon(Icons.close, size: 28),
-              ]
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Image.asset('assets/png/without_barcode.png'),
             ),
             label: 'Without Bar Code',
             onTap: () => openFoodAdderPopup(context, null),
