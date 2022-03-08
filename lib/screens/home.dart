@@ -89,6 +89,14 @@ class Home extends StatelessWidget {
           SpeedDialChild(
             child: Padding(
               padding: const EdgeInsets.all(8.0),
+              child: Image.asset('assets/png/without_barcode.png'),
+            ),
+            label: 'Without Bar Code',
+            onTap: () => openFoodAdderPopup(context, null),
+          ),
+          SpeedDialChild(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
               child: Image.asset('assets/png/with_barcode.png'),
             ),
             label: 'With Bar Code',
@@ -105,14 +113,6 @@ class Home extends StatelessWidget {
               }
               openFoodAdderPopup(context, barcode);
             }
-          ),
-          SpeedDialChild(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Image.asset('assets/png/without_barcode.png'),
-            ),
-            label: 'Without Bar Code',
-            onTap: () => openFoodAdderPopup(context, null),
           ),
         ],
       ),
