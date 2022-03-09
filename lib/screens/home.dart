@@ -1,3 +1,4 @@
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
@@ -36,6 +37,7 @@ class Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Quick actions init
     QuickActions quickActions = const QuickActions();
     quickActions.setShortcutItems(<ShortcutItem>[
       const ShortcutItem(
@@ -57,6 +59,14 @@ class Home extends StatelessWidget {
       if (shortcutType == 'add_product_without_barcode') {
         openFoodAdderPopup(context, null);
       }
+    });
+    // Allow notification permissions
+    AwesomeNotifications().isNotificationAllowed().then((isAllowed) async {
+      if (isAllowed) {
+        return;
+      }
+
+      await AwesomeNotifications().requestPermissionToSendNotifications();
     });
 
 
