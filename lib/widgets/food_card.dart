@@ -8,9 +8,9 @@ class FoodCard extends StatelessWidget {
   final String title;
   final DateTime expiration;
   final double quantity;
-  final int index;
+  final String id;
 
-  const FoodCard({Key? key, required this.title, required this.expiration, required this.index, required this.quantity}) : super(key: key);
+  const FoodCard({Key? key, required this.title, required this.expiration, required this.id, required this.quantity}) : super(key: key);
 
   Color calculateProgressIndicatorColor(int expirationDays) {
     if (expirationDays >= 15) {
@@ -91,7 +91,7 @@ class FoodCard extends StatelessWidget {
         showDialog(
           context: context,
           builder: (BuildContext context) {
-            return FoodAdderPopup(indexToUpdate: index);
+            return FoodAdderPopup(id: id);
           }
         );
       },

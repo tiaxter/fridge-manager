@@ -1,16 +1,18 @@
-import 'package:cart_stepper/cart_stepper.dart';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_spinbox/flutter_spinbox.dart';
 import 'package:intl/intl.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:jiffy/jiffy.dart';
+import 'package:streaming_shared_preferences/streaming_shared_preferences.dart';
 
 import '../utils/api.dart';
 
 class FoodAdderPopup extends StatefulWidget{
   final String? barCode;
-  final int? indexToUpdate;
+  final String? id;
   const FoodAdderPopup({
-    Key? key, this.barCode, this.indexToUpdate
+    Key? key, this.barCode, this.id
   }) : super(key: key);
 
   @override
@@ -29,18 +31,18 @@ class _FoodAdderPopupState extends State<FoodAdderPopup>{
   void openDatePicker(BuildContext context) async {
     DateTime? date = await showDatePicker(
       context: context,
-      initialDate: (formFields.containsKey("expirationDate") && formFields["expirationDate"] != null) ? formFields["expirationDate"] : DateTime.now(),
+      initialDate: (formFields.containsKey("expirationDate") && formFields["expirationDate"] != null) ? Jiffy(formFields["expirationDate"]).dateTime : DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime(3000)
     );
 
     if (date != null) {
       expirationDateController.text = DateFormat('yyyy-MM-dd').format(date);
-      formFields["expirationDate"] = date;
+      formFields["expirationDate"] = DateFormat('yyyy-MM-dd').format(date);
     }
   }
 
-  void onSave() {
+  void onSave() async {
     // If name field is not valid
     if (!formKey.currentState!.validate()) {
       return;
@@ -53,51 +55,67 @@ class _FoodAdderPopupState extends State<FoodAdderPopup>{
     }
 
     // Get stored foods
-    List<dynamic> foods = Hive.box('app').get('foods', defaultValue: <Map<dynamic, dynamic>>[]);
+    StreamingSharedPreferences preferences = await StreamingSharedPreferences.instance;
+    List<dynamic> products = jsonDecode(preferences.getString('products', defaultValue: '[]').getValue());
 
-    if (widget.indexToUpdate != null) {
+
+    if (widget.id != null) {
       // Replace the old with the new one
-      foods[widget.indexToUpdate ?? 0] = formFields;
+      products[products.indexWhere((product) => product['id'] == widget.id)] = formFields;
     } else {
+      formFields['id'] = UniqueKey().toString();
       // Add the new one
-      foods.add(formFields);
+      products.add(formFields);
     }
 
     // Save velues to the db
-    Hive.box('app').put('foods', foods);
+    await preferences.setString('products', jsonEncode(products));
     Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    String action = widget.indexToUpdate != null ? "Edit" : "Add";
-    if (widget.indexToUpdate != null) {
-      var currentFood = Hive.box('app').get('foods', defaultValue: <Map<dynamic, dynamic>>[])[widget.indexToUpdate ?? 0];
-      formFields["productName"] = currentFood["productName"];
-      formFields["expirationDate"] = currentFood["expirationDate"];
-      formFields["quantity"] = currentFood["quantity"] ?? 1.0;
-      productNameController.text = formFields["productName"];
-      expirationDateController.text = DateFormat('yyyy-MM-dd').format(formFields["expirationDate"]);
+    String action = 'Add';
+    if (widget.id != null) {
+      action = 'Edit';
     }
-
     return AlertDialog(
-      title: Text("$action food"),
+      title: Text('$action product'),
       content: FutureBuilder(
-        future: widget.barCode == null ? null: Api.getProductInfo(widget.barCode ?? ""),
+        future: Future.wait([
+          StreamingSharedPreferences.instance,
+          widget.barCode == null ? Future.value(null) : Api.getProductInfo(widget.barCode ?? ''),
+        ]),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const SizedBox(
-              width: double.infinity,
-              height: 60,
-              child: Center(
-                child: CircularProgressIndicator()
-              )
+            return const Center(
+              child: CircularProgressIndicator(),
             );
           }
 
-          if (snapshot.hasData && (snapshot.data as Map<String, dynamic>)["status"] == 1) {
-            Map<String, dynamic> data = snapshot.data;
-            productNameController.text = data["product"]["product_name_it"] ?? data["product"]["product_name"];
+          if (snapshot.hasError) {
+            return const Center(
+              child: Text('Ops, an error occurred, please retry later'),
+            );
+          }
+
+          StreamingSharedPreferences preferences = snapshot.data[0];
+          var productData = snapshot.data[1];
+
+          if (productData != null && productData['status'] == 1) {
+            productNameController.text = productData["product"]["product_name_it"] ?? productData["product"]["product_name"];
+          }
+
+          if (widget.id != null) {
+            // Get stored foods
+            List<dynamic> products = jsonDecode(preferences.getString('products', defaultValue: '[]').getValue());
+            Map<String, dynamic> currentProduct = products.firstWhere((product) => product['id'] == widget.id);
+            formFields['id'] = currentProduct['id'];
+            formFields["productName"] = currentProduct["productName"];
+            formFields["expirationDate"] = currentProduct["expirationDate"];
+            formFields["quantity"] = currentProduct["quantity"] ?? 1.0;
+            productNameController.text = formFields["productName"];
+            expirationDateController.text = DateFormat('yyyy-MM-dd').format(Jiffy(formFields["expirationDate"]).dateTime);
           }
 
           return Form(
@@ -108,7 +126,7 @@ class _FoodAdderPopupState extends State<FoodAdderPopup>{
                   TextFormField(
                     controller: productNameController,
                     decoration: const InputDecoration(
-                      labelText: "Food name"
+                      labelText: "Product name"
                     ),
                     validator: (value) => (value == null || value.isEmpty) ? 'Required field' : null,
                     onSaved: (String? value) => formFields["productName"] = value ?? "",

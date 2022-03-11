@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class DismissableTile extends StatelessWidget {
+  @override
   final Key key;
   final Widget child;
   final Function() onDismissed;
