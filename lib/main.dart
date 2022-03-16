@@ -1,27 +1,33 @@
-import 'dart:io';
-import 'dart:isolate';
-
 import 'package:awesome_notifications/awesome_notifications.dart';
-import 'package:drift/drift.dart';
-import 'package:drift/isolate.dart';
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:fridge_management/screens/home.dart';
+import 'package:jiffy/jiffy.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:workmanager/workmanager.dart';
-/* import 'package:shared_preferences_android/shared_preferences_android.dart'; */
-/* import 'package:shared_preferences_ios/shared_preferences_ios.dart'; */
-/* import 'package:streaming_shared_preferences/streaming_shared_preferences.dart'; */
 import 'data/drift_database.dart';
 
 void callbackDispatcher() {
   Workmanager().executeTask((taskName, inputData) async {
     if (taskName == 'checkingProductExpirations' && inputData != null) {
         final db = AppDb.connectIsolated(inputData['dbPath']);
-        
-        print(await db.getExpiringProducts());
+        List<Product> products = await db.getExpiringProducts();
+
+        if (products.isNotEmpty) {
+          AwesomeNotifications().createNotification(
+            content: NotificationContent(
+              id: UniqueKey().hashCode,
+              channelKey: 'basic_channel',
+              title: 'Food is expiring!',
+              body: products.map((Product product) {
+                int expirationDays = Jiffy(product.expiration).endOf(Units.DAY).diff(Jiffy(), Units.DAY, false).toInt();
+                String expiringDaysMessage = expirationDays == 0 ? 'today' : 'in $expirationDays ${expirationDays > 1 ? "days" : "day"}';
+                return '${product.name} is expiring $expiringDaysMessage';
+              }).join('\n')
+            )
+          );
+        }
 
         await db.close();
     }
@@ -29,25 +35,29 @@ void callbackDispatcher() {
   });
 }
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  // Cose
+void initWorkmanager() async {
   var dir = await getApplicationDocumentsDirectory();
   String path = p.join(dir.path, 'db.sqlite');
 
   Workmanager().initialize(
     callbackDispatcher,
-    isInDebugMode: true,
+    isInDebugMode: false,
   );
   Workmanager().cancelAll();
   Workmanager().registerPeriodicTask(
     '1',
     'checkingProductExpirations',
-    frequency: const Duration(minutes: 15),
+    frequency: const Duration(hours: 12),
     inputData: {
       "dbPath": path,
     }
   );
+}
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Workmanager init
+  initWorkmanager();
 
   // Awesome notification init
   AwesomeNotifications().initialize(

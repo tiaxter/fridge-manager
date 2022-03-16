@@ -94,10 +94,6 @@ class AppDb extends _$AppDb {
           return t.expiration.isBetweenValues(start, end) & t.deletedAt.isNull();
         }
       )
-      ..map((Product product) {
-        int expirationDays = Jiffy(product.expiration).endOf(Units.DAY).diff(Jiffy(), Units.DAY, false).toInt();
-        return ProductWithExpirationsDays(product, expirationDays);
-      })
     ).get();
   }
 }

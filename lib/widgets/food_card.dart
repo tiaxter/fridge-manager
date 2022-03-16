@@ -25,7 +25,6 @@ class FoodCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    /* int expirationDays = expiration.difference(DateTime.now()).inDays; */
     int expirationDays = Jiffy(expiration).endOf(Units.DAY).diff(Jiffy(), Units.DAY, false).toInt();
     return ListTile(
       title: Column(
