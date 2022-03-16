@@ -1,8 +1,6 @@
-import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:fridge_management/screens/settings.dart';
 import 'package:fridge_management/widgets/dismissable_tile.dart';
 import 'package:fridge_management/widgets/food_adder.dart';
 import 'package:fridge_management/widgets/food_card.dart';
@@ -10,7 +8,6 @@ import 'package:provider/provider.dart';
 import 'package:quick_actions/quick_actions.dart';
 
 import '../data/drift_database.dart';
-/* import 'package:streaming_shared_preferences/streaming_shared_preferences.dart'; */
 
 class Home extends StatelessWidget {
   const Home({Key? key}) : super(key: key);

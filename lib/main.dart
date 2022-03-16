@@ -4,9 +4,9 @@ import 'package:fridge_management/screens/home.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:path/path.dart' as p;
 import 'package:workmanager/workmanager.dart';
 import 'data/drift_database.dart';
+import 'package:path/path.dart' as p;
 
 void callbackDispatcher() {
   Workmanager().executeTask((taskName, inputData) async {
@@ -43,7 +43,7 @@ void initWorkmanager() async {
     callbackDispatcher,
     isInDebugMode: false,
   );
-  Workmanager().cancelAll();
+  // Workmanager().cancelAll();
   Workmanager().registerPeriodicTask(
     '1',
     'checkingProductExpirations',
