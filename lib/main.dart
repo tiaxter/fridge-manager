@@ -1,60 +1,52 @@
-import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:drift/drift.dart';
+import 'package:drift/isolate.dart';
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:fridge_management/screens/home.dart';
-import 'package:jiffy/jiffy.dart';
-import 'package:shared_preferences_android/shared_preferences_android.dart';
-import 'package:shared_preferences_ios/shared_preferences_ios.dart';
-import 'package:streaming_shared_preferences/streaming_shared_preferences.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:path/path.dart' as p;
 import 'package:workmanager/workmanager.dart';
+/* import 'package:shared_preferences_android/shared_preferences_android.dart'; */
+/* import 'package:shared_preferences_ios/shared_preferences_ios.dart'; */
+/* import 'package:streaming_shared_preferences/streaming_shared_preferences.dart'; */
+import 'data/drift_database.dart';
 
 void callbackDispatcher() {
   Workmanager().executeTask((taskName, inputData) async {
-    if (taskName == 'checkingProductExpirations') {
-      // Shared preferences init
-      if (Platform.isAndroid) SharedPreferencesAndroid.registerWith();
-      if (Platform.isIOS) SharedPreferencesIOS.registerWith();
-      StreamingSharedPreferences prefs = await StreamingSharedPreferences.instance;
+    if (taskName == 'checkingProductExpirations' && inputData != null) {
+        final db = AppDb.connectIsolated(inputData['dbPath']);
+        
+        print(await db.getExpiringProducts());
 
-      // Get the products
-      List<dynamic> products = jsonDecode(prefs.getString('products', defaultValue: '[]').getValue());
-      // Filter expiring products 
-      products = products.where((product) {
-        return Jiffy(product["expirationDate"]).endOf(Units.DAY).diff(Jiffy(), Units.DAY, false).toInt() <= 3;
-      }).toList();
-      // If there aren't expired products then don't do nothing
-      if (products.isEmpty) {
-        return Future.value(true);
-      }
-      // Send notification about expiring food
-      AwesomeNotifications().createNotification(
-        content: NotificationContent(
-          id: UniqueKey().hashCode,
-          channelKey: 'basic_channel',
-          title: 'Food is expiring!!',
-          body: products.map((product) {
-            int expirationDays = Jiffy(product["expirationDate"]).endOf(Units.DAY).diff(Jiffy(), Units.DAY, false).toInt();
-            return '${product["productName"]} expiring in $expirationDays ${expirationDays > 1 ? "days" : "day"}';
-          }).join('\n'),
-        ),
-      );
+        await db.close();
     }
     return Future.value(true);
   });
 }
 
-void main() {
-  // Workmanager init
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Cose
+  var dir = await getApplicationDocumentsDirectory();
+  String path = p.join(dir.path, 'db.sqlite');
+
   Workmanager().initialize(
     callbackDispatcher,
-    isInDebugMode: false,
+    isInDebugMode: true,
   );
+  Workmanager().cancelAll();
   Workmanager().registerPeriodicTask(
     '1',
     'checkingProductExpirations',
-    frequency: const Duration(hours: 1),
+    frequency: const Duration(minutes: 15),
+    inputData: {
+      "dbPath": path,
+    }
   );
 
   // Awesome notification init
@@ -81,13 +73,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Fridge Management',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
+    return Provider(
+      create: (_) => AppDb(),
+      child: MaterialApp(
+        title: 'Fridge Management',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          useMaterial3: true,
+        ),
+        home: const Home(),
       ),
-      home: const Home(),
     );
   }
 }
+

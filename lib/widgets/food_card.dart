@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:jiffy/jiffy.dart';
 
 import 'food_adder.dart';
@@ -8,7 +7,7 @@ class FoodCard extends StatelessWidget {
   final String title;
   final DateTime expiration;
   final double quantity;
-  final String id;
+  final int id;
 
   const FoodCard({Key? key, required this.title, required this.expiration, required this.id, required this.quantity}) : super(key: key);
 
@@ -49,7 +48,7 @@ class FoodCard extends StatelessWidget {
             ],
           ),
           Text(
-            "Expiration: ${DateFormat('yyyy-MM-dd').format(expiration)}",
+            "Expiration: ${Jiffy(expiration).format('yyyy-MM-dd')}",
             style: const TextStyle(
               color: Colors.grey,
               fontSize: 12

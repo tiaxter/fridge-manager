@@ -42,9 +42,8 @@ class DismissableTile extends StatelessWidget {
       secondaryBackground: deleteBackground(MainAxisAlignment.end),
       onDismissed: (DismissDirection dismissDirection) async {
         // Execute on Dismissed function
-        onDismissed();
-        // Show snackbar to undo the delete operation
-        Scaffold.of(context).showSnackBar(SnackBar(
+        await onDismissed();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           backgroundColor: Colors.red,
           content: const Text('Product removed!'),
           action: SnackBarAction(

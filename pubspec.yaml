@@ -36,18 +36,23 @@ dependencies:
   cupertino_icons: ^1.0.2
   dio: ^4.0.4
   flutter_speed_dial: ^5.0.0+1
-  intl: ^0.17.0
   flutter_barcode_scanner: ^2.0.0
   flutter_spinbox: ^0.8.0
   jiffy: ^5.0.0
   quick_actions: ^0.6.0+10
   workmanager: ^0.4.1
   awesome_notifications: ^0.6.21
-  shared_preferences: ^2.0.13
   provider: ^6.0.2
-  streaming_shared_preferences: ^2.0.0
-  shared_preferences_android: ^2.0.11
-  shared_preferences_ios: ^2.1.0
+  # Drift DB
+  drift: ^1.4.0
+  sqlite3_flutter_libs: ^0.5.0
+  path_provider: ^2.0.0
+  path: ^1.8.0
+  # intl: ^0.17.0
+  # shared_preferences: ^2.0.13
+  # streaming_shared_preferences: ^2.0.0
+  # shared_preferences_android: ^2.0.11
+  # shared_preferences_ios: ^2.1.0
 
 dev_dependencies:
   flutter_test:
@@ -60,6 +65,8 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^1.0.0
   build_runner: ^2.1.7
+  # Drift DB
+  drift_dev: ^1.4.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

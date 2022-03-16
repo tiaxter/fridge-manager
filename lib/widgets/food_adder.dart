@@ -1,16 +1,17 @@
-import 'dart:convert';
-
+import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter_spinbox/flutter_spinbox.dart';
-import 'package:intl/intl.dart';
+import 'package:fridge_management/data/drift_database.dart';
+// import 'package:intl/intl.dart';
 import 'package:jiffy/jiffy.dart';
-import 'package:streaming_shared_preferences/streaming_shared_preferences.dart';
+import 'package:provider/provider.dart';
+// import 'package:streaming_shared_preferences/streaming_shared_preferences.dart';
 
 import '../utils/api.dart';
 
 class FoodAdderPopup extends StatefulWidget{
   final String? barCode;
-  final String? id;
+  final int? id;
   const FoodAdderPopup({
     Key? key, this.barCode, this.id
   }) : super(key: key);
@@ -37,12 +38,12 @@ class _FoodAdderPopupState extends State<FoodAdderPopup>{
     );
 
     if (date != null) {
-      expirationDateController.text = DateFormat('yyyy-MM-dd').format(date);
-      formFields["expirationDate"] = DateFormat('yyyy-MM-dd').format(date);
+      expirationDateController.text = Jiffy(date).format('yyyy-MM-dd');
+      formFields["expirationDate"] = Jiffy(date).dateTime;
     }
   }
 
-  void onSave() async {
+  void onSave(AppDb db) async {
     // If name field is not valid
     if (!formKey.currentState!.validate()) {
       return;
@@ -54,38 +55,58 @@ class _FoodAdderPopupState extends State<FoodAdderPopup>{
       return;
     }
 
-    // Get stored foods
-    StreamingSharedPreferences preferences = await StreamingSharedPreferences.instance;
-    List<dynamic> products = jsonDecode(preferences.getString('products', defaultValue: '[]').getValue());
-
-
     if (widget.id != null) {
       // Replace the old with the new one
-      products[products.indexWhere((product) => product['id'] == widget.id)] = formFields;
+      db.updateProduct(
+        Product(
+          id: widget.id ?? 0,
+          name: formFields['productName'],
+          quantity: formFields['quantity'].toInt(),
+          expiration: formFields['expirationDate'],
+          deletedAt: null,
+        )
+      );
     } else {
-      formFields['id'] = UniqueKey().toString();
       // Add the new one
-      products.add(formFields);
+      db.addProduct(
+        ProductsCompanion(
+          name: Value(formFields['productName']),
+          quantity: Value(formFields['quantity'].toInt()),
+          expiration: Value(formFields['expirationDate']),
+          deletedAt: const Value.absent(),
+        )
+      );
     }
 
     // Save velues to the db
-    await preferences.setString('products', jsonEncode(products));
     Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
+    AppDb db = Provider.of<AppDb>(context);
+
     String action = 'Add';
     if (widget.id != null) {
       action = 'Edit';
     }
+
+    if (widget.id != null) {
+      // Get stored foods
+      db.getProductById(widget.id ?? 0).then((Product product) {
+        formFields['id'] = product.id;
+        formFields["productName"] = product.name;
+        formFields["expirationDate"] = product.expiration;
+        formFields["quantity"] = product.quantity.toDouble();
+        productNameController.text = formFields["productName"];
+        expirationDateController.text = Jiffy(formFields["expirationDate"]).format('yyyy-MM-dd');
+      });
+    }
+
     return AlertDialog(
       title: Text('$action product'),
       content: FutureBuilder(
-        future: Future.wait([
-          StreamingSharedPreferences.instance,
-          widget.barCode == null ? Future.value(null) : Api.getProductInfo(widget.barCode ?? ''),
-        ]),
+        future: widget.barCode == null ? Future.value(null) : Api.getProductInfo(widget.barCode ?? ''),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
@@ -93,29 +114,10 @@ class _FoodAdderPopupState extends State<FoodAdderPopup>{
             );
           }
 
-          if (snapshot.hasError) {
-            return const Center(
-              child: Text('Ops, an error occurred, please retry later'),
-            );
-          }
-
-          StreamingSharedPreferences preferences = snapshot.data[0];
-          var productData = snapshot.data[1];
+          var productData = snapshot.data;
 
           if (productData != null && productData['status'] == 1) {
             productNameController.text = productData["product"]["product_name_it"] ?? productData["product"]["product_name"];
-          }
-
-          if (widget.id != null) {
-            // Get stored foods
-            List<dynamic> products = jsonDecode(preferences.getString('products', defaultValue: '[]').getValue());
-            Map<String, dynamic> currentProduct = products.firstWhere((product) => product['id'] == widget.id);
-            formFields['id'] = currentProduct['id'];
-            formFields["productName"] = currentProduct["productName"];
-            formFields["expirationDate"] = currentProduct["expirationDate"];
-            formFields["quantity"] = currentProduct["quantity"] ?? 1.0;
-            productNameController.text = formFields["productName"];
-            expirationDateController.text = DateFormat('yyyy-MM-dd').format(Jiffy(formFields["expirationDate"]).dateTime);
           }
 
           return Form(
@@ -161,7 +163,7 @@ class _FoodAdderPopupState extends State<FoodAdderPopup>{
         ),
         TextButton(
           child: Text(action),
-          onPressed: onSave,
+          onPressed: () => onSave(db),
         )
       ],
     );
