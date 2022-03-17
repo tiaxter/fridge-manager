@@ -11,25 +11,25 @@ import 'package:path/path.dart' as p;
 void callbackDispatcher() {
   Workmanager().executeTask((taskName, inputData) async {
     if (taskName == 'checkingProductExpirations' && inputData != null) {
-        final db = AppDb.connectIsolated(inputData['dbPath']);
-        List<Product> products = await db.getExpiringProducts();
-
-        if (products.isNotEmpty) {
-          AwesomeNotifications().createNotification(
-            content: NotificationContent(
-              id: UniqueKey().hashCode,
-              channelKey: 'basic_channel',
-              title: 'Food is expiring!',
-              body: products.map((Product product) {
-                int expirationDays = Jiffy(product.expiration).endOf(Units.DAY).diff(Jiffy(), Units.DAY, false).toInt();
-                String expiringDaysMessage = expirationDays == 0 ? 'today' : 'in $expirationDays ${expirationDays > 1 ? "days" : "day"}';
-                return '${product.name} is expiring $expiringDaysMessage';
-              }).join('\n')
-            )
-          );
-        }
-
-        await db.close();
+      final db = AppDb.connectIsolated(inputData['dbPath']);
+      // Get all expiring products
+      List<Product> products = await db.getExpiringProducts();
+      // If there are expiring produts then send notification
+      if (products.isNotEmpty) {
+        AwesomeNotifications().createNotification(
+          content: NotificationContent(
+            id: UniqueKey().hashCode,
+            channelKey: 'basic_channel',
+            title: 'Food is expiring!',
+            body: products.map((Product product) {
+              int expirationDays = Jiffy(product.expiration).endOf(Units.DAY).diff(Jiffy(), Units.DAY, false).toInt();
+              String expiringDaysMessage = expirationDays == 0 ? 'today' : 'in $expirationDays ${expirationDays > 1 ? "days" : "day"}';
+              return '${product.name} is expiring $expiringDaysMessage';
+            }).join('\n')
+          )
+        );
+      }
+      await db.close();
     }
     return Future.value(true);
   });
@@ -43,7 +43,6 @@ void initWorkmanager() async {
     callbackDispatcher,
     isInDebugMode: false,
   );
-  // Workmanager().cancelAll();
   Workmanager().registerPeriodicTask(
     '1',
     'checkingProductExpirations',

@@ -2,10 +2,8 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter_spinbox/flutter_spinbox.dart';
 import 'package:fridge_management/data/drift_database.dart';
-// import 'package:intl/intl.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:provider/provider.dart';
-// import 'package:streaming_shared_preferences/streaming_shared_preferences.dart';
 
 import '../utils/api.dart';
 
@@ -25,6 +23,7 @@ class _FoodAdderPopupState extends State<FoodAdderPopup>{
   Map<String, dynamic> formFields = {
     'quantity': 1.0,
   };
+
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
   TextEditingController productNameController = TextEditingController();
   TextEditingController expirationDateController = TextEditingController();
@@ -86,10 +85,7 @@ class _FoodAdderPopupState extends State<FoodAdderPopup>{
   Widget build(BuildContext context) {
     AppDb db = Provider.of<AppDb>(context);
 
-    String action = 'Add';
-    if (widget.id != null) {
-      action = 'Edit';
-    }
+    String action = widget.id != null ? 'Edit' : 'Add';
 
     if (widget.id != null) {
       // Get stored foods
@@ -109,7 +105,9 @@ class _FoodAdderPopupState extends State<FoodAdderPopup>{
         future: widget.barCode == null ? Future.value(null) : Api.getProductInfo(widget.barCode ?? ''),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
+            return const SizedBox(
+              width: 50,
+              height: 50,
               child: CircularProgressIndicator(),
             );
           }

@@ -17,13 +17,6 @@ class Products extends Table {
   DateTimeColumn get deletedAt => dateTime().nullable()();
 }
 
-class ProductWithExpirationsDays {
-  final Product product;
-  final int expirationDays;
-
-  ProductWithExpirationsDays(this.product, this.expirationDays);
-}
-
 @DriftDatabase(tables: [Products])
 class AppDb extends _$AppDb {
   AppDb() : super(_openConnection());

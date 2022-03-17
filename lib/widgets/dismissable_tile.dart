@@ -43,6 +43,7 @@ class DismissableTile extends StatelessWidget {
       onDismissed: (DismissDirection dismissDirection) async {
         // Execute on Dismissed function
         await onDismissed();
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           backgroundColor: Colors.red,
           content: const Text('Product removed!'),
