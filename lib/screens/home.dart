@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:fridge_management/widgets/dismissable_tile.dart';
+import 'package:fridge_management/widgets/slidable_tile.dart';
 import 'package:fridge_management/widgets/food_adder.dart';
 import 'package:fridge_management/widgets/food_card.dart';
 import 'package:provider/provider.dart';
@@ -43,6 +43,7 @@ class Home extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Fridge Management"),
+        centerTitle: true,
       ),
       floatingActionButton: SpeedDial(
         icon: Icons.add,
@@ -73,11 +74,32 @@ class Home extends StatelessWidget {
         builder: (BuildContext context, AsyncSnapshot<List<Product>> snapshot) {
           List<Product> products = snapshot.data ?? [];
 
+          if (products.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(
+                    Icons.add,
+                    size: 50,
+                    color: Colors.grey,
+                  ),
+                  Text(
+                    "There are no product, add a new onw",
+                    style: TextStyle(
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+
           return ListView.builder(
            shrinkWrap: true,
            itemCount: products.length,
            itemBuilder: (context, index) {
-             return DismissableTile(
+             return SlidableTile(
               key: UniqueKey(),
               child: FoodCard(
                 id: products[index].id,
@@ -85,10 +107,16 @@ class Home extends StatelessWidget {
                 expiration: products[index].expiration,
                 quantity: products[index].quantity.toDouble(),
               ),
-              onDismissed: () async {
-                await db.deleteProduct(products[index].id);
+              delete: () async => await db.deleteProduct(products[index].id),
+              remove: () async => await db.removeProduct(products[index].id),
+              edit: () => showDialog(
+                context: context,
+                builder: (BuildContext context) => FoodAdderPopup(id: products[index].id),
+              ),
+              deleteDismiss: () async {
+                await db.undoDeleteProduct(products[index].id);
               },
-              cancelDismiss: () async {
+              removeDismiss: () async {
                 await db.undoDeleteProduct(products[index].id);
               },
              );

@@ -1,4 +1,5 @@
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fridge_management/screens/home.dart';
 import 'package:jiffy/jiffy.dart';
@@ -41,7 +42,7 @@ void initWorkmanager() async {
 
   Workmanager().initialize(
     callbackDispatcher,
-    isInDebugMode: false,
+    isInDebugMode: kReleaseMode ? false : true,
   );
   Workmanager().registerPeriodicTask(
     '1',

@@ -85,14 +85,6 @@ class FoodCard extends StatelessWidget {
           ),
         ),
       ),
-      onTap: () {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return FoodAdderPopup(id: id);
-          }
-        );
-      },
     );
   }
 

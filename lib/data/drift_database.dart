@@ -64,15 +64,47 @@ class AppDb extends _$AppDb {
     ));
   }
 
-  Future undoDeleteProduct(int id) {
+  Future _editProductQuantity(int id, int quantity) {
     return (
-      update(products)
-      ..where(
-        (t) => t.id.equals(id)
-      )
-    ).write(const ProductsCompanion(
-        deletedAt: Value(null)
+     update(products)
+     ..where(
+       (t) => t.id.equals(id)
+     )
+    ).write(ProductsCompanion(
+        quantity: Value(quantity)
     ));
+  }
+
+  Future removeProduct(int id) async {
+    Product product = await getProductById(id);
+    int quantity = product.quantity;
+
+    // If there are more than two products then decrease the quantity
+    if (product.quantity > 1) {
+      return _editProductQuantity(id, --quantity);
+    }
+    // If quantity is equal to 1 then delete it
+    return deleteProduct(id);
+  }
+
+  Future undoDeleteProduct(int id) async {
+    Product product = await getProductById(id);
+    int quantity = product.quantity;
+
+    // If product is deleted then restore it
+    if (product.deletedAt != null) {
+      return (
+       update(products)
+       ..where(
+         (t) => t.id.equals(id)
+       )
+      ).write(const ProductsCompanion(
+          deletedAt: Value(null)
+      ));
+    }
+
+    // If there are more than two products then decrease the quantity
+    return _editProductQuantity(id, ++quantity);
   }
 
   Future<List<Product>> getExpiringProducts() {
