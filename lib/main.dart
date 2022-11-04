@@ -66,7 +66,7 @@ void main() {
       NotificationChannel(
         channelKey: 'basic_channel',
         channelName: 'Basic notifications',
-        defaultColor: Colors.blue,
+        defaultColor: Colors.green,
         importance: NotificationImportance.High,
         channelShowBadge: true,
         channelDescription: '',
@@ -88,7 +88,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Fridge Management',
         theme: ThemeData(
-          primarySwatch: Colors.blue,
+          primarySwatch: Colors.green,
           useMaterial3: true,
         ),
         home: const Home(),
