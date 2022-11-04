@@ -40,7 +40,7 @@ dependencies:
   flutter_spinbox: ^0.8.0
   jiffy: ^5.0.0
   quick_actions: ^0.6.0+10
-  workmanager: ^0.4.1
+  workmanager: ^0.5.1
   awesome_notifications: ^0.6.21
   provider: ^6.0.2
   flutter_slidable: ^1.2.0
